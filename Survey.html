@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BNFmax Validation Console — SUS &amp; CVI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0f2f5;--card:#fff;--border:#e2e5ea;--text:#1a1d23;--muted:#6b7280;
+--teal:#0d9488;--teal-l:#ccfbf1;--indigo:#4f46e5;--indigo-l:#e0e7ff;--amber:#f59e0b;--amber-l:#fef3c7;
+--red:#dc2626;--red-l:#fee2e2;--green:#16a34a;--green-l:#dcfce7;--blue:#2563eb;--blue-l:#dbeafe;
+--radius:16px;--shadow:0 1px 3px rgba(0,0,0,.06)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh;font-size:14px}
+.container{max-width:980px;margin:0 auto;padding:20px 16px 70px}
+.hidden{display:none!important}
+.badge{display:inline-block;background:var(--teal-l);color:var(--teal);font-size:11px;font-weight:700;
+letter-spacing:.06em;text-transform:uppercase;padding:6px 14px;border-radius:99px;margin-bottom:12px}
+.grad-title{font-size:clamp(26px,5vw,38px);font-weight:800;line-height:1.15;
+background:linear-gradient(135deg,#0d9488,#4f46e5);-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.subtitle{color:var(--muted);max-width:640px;margin:0 auto 22px}
+.center{text-align:center}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;
+align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-head h2{font-size:15px;font-weight:700}
+.card-body{padding:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:99px;
+font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:#0f766e}
+.btn-indigo{background:var(--indigo);color:#fff}.btn-indigo:hover{background:#4338ca}
+.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+.btn-danger{background:var(--red-l);color:var(--red)}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
+.label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:block;margin-bottom:5px}
+input[type="text"],input[type="password"],input[type="email"],select,textarea{
+width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal)}
+.kpi.indigo::before{background:var(--indigo)}.kpi.amber::before{background:var(--amber)}.kpi.red::before{background:var(--red)}
+.kpi .k-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.kpi .k-val{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi .k-sub{font-size:10px;color:var(--muted);margin-top:2px}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th,table.t td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
+table.t th{background:#f8fafc;font-size:10.5px;text-transform:uppercase;color:var(--muted)}
+td.num,th.num{text-align:center}
+.chip-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:99px}
+.chip-badge.teal{background:var(--teal-l);color:var(--teal)}.chip-badge.amber{background:var(--amber-l);color:#b45309}
+.chip-badge.red{background:var(--red-l);color:var(--red)}.chip-badge.green{background:var(--green-l);color:var(--green)}
+.chip-badge.indigo{background:var(--indigo-l);color:var(--indigo)}
+.progress-wrap{position:sticky;top:0;z-index:40;background:var(--bg);padding:8px 0}
+.progress-bar{height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#0d9488,#4f46e5);width:0%;transition:width .25s}
+.progress-txt{font-size:11px;color:var(--muted);margin-top:4px;text-align:center}
+.q{padding:13px 6px;border-bottom:1px solid #f0f1f4;border-radius:10px}
+.q.miss{background:var(--red-l)}
+.qtext{font-size:13.5px;font-weight:500;margin-bottom:8px}
+.qnum{display:inline-block;background:var(--indigo-l);color:var(--indigo);font-weight:800;font-size:11px;
+min-width:26px;height:22px;line-height:22px;text-align:center;border-radius:7px;margin-right:8px}
+.likrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lik-end{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase}
+.lik-btns{display:flex;gap:5px;flex:1;justify-content:center}
+.lik-btn{width:42px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:#fff;
+font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);font-family:inherit}
+.lik-btn:hover{border-color:var(--teal);color:var(--teal)}
+.lik-btn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.mini-input{margin-top:8px}
+.note{background:var(--blue-l);border:1px solid var(--blue);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:12px}
+.warn{background:var(--amber-l);border:1px solid var(--amber);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:12px}
+.ok-box{background:var(--green-l);border:1px solid var(--green);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:12px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1a1d23;color:#fff;
+padding:10px 20px;border-radius:99px;font-size:13px;z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+textarea.report{font-family:Consolas,"Courier New",monospace;font-size:11.5px;white-space:pre;overflow:auto}
+.dist-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:11px}
+.dist-lbl{width:150px;color:var(--muted);font-weight:600}
+.dist-bar{flex:1;height:14px;background:#f3f4f6;border-radius:99px;overflow:hidden}
+.dist-fill{height:100%;background:var(--teal)}
+.dist-n{width:30px;text-align:right;font-weight:700}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{font-size:12px;font-weight:700;padding:8px 14px;border-radius:99px;border:1.5px solid var(--border);
+background:#fff;cursor:pointer;color:var(--muted);font-family:inherit}
+.tab.on{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.receipt-item{padding:6px 0;border-bottom:1px dashed var(--border);font-size:12.5px;display:flex;justify-content:space-between;gap:12px}
+.receipt-item:last-child{border-bottom:none}
+.machine-block{margin-top:16px;border-top:1px dashed var(--border);padding-top:10px}
+.machine-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:5px}
+.machine-pre{font-family:Consolas,"Courier New",monospace;font-size:10px;white-space:pre-wrap;word-break:break-all;
+background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:9px;line-height:1.5}
+.err-banner{position:fixed;top:0;left:0;right:0;background:var(--red);color:#fff;padding:10px 16px;
+font-size:12px;z-index:400;font-family:monospace}
+footer{color:var(--muted);font-size:11px;text-align:center;margin-top:24px;line-height:1.7}
+@media print{
+  body{background:#fff;font-size:12px}
+  .no-print{display:none!important}
+  .container{max-width:100%;padding:0}
+  .card{box-shadow:none;border:1px solid #999;break-inside:avoid}
+  .machine-pre{background:#fff;border:1px solid #666}
+}
+</style>
+</head>
+<body>
+
+<div class="err-banner hidden no-print" id="errBanner">
+  <b>Script error:</b> <span id="errMsg"></span>
+  <button class="btn btn-sm" style="margin-left:10px;background:#fff" onclick="this.parentNode.classList.add('hidden')">✕</button>
+</div>
+
+<div class="container">
+
+<!-- ═══════════ LANDING ═══════════ -->
+<div id="view-landing">
+  <div class="center">
+    <div class="badge">Validation Instrument</div>
+    <h1 class="grad-title">BNFmax Validation Console</h1>
+    <p class="subtitle">System Usability Scale (SUS) &amp; Content Validity Index (CVI) — participant survey and developer analysis.</p>
+    <div id="engineChips" class="center" style="margin-bottom:18px"></div>
+  </div>
+  <div id="sandboxWarn" class="warn hidden no-print" style="max-width:720px;margin:0 auto 16px">
+    ⚠ <b>You are viewing this inside a sandboxed preview (no storage).</b> The survey still works, but data will not be saved when you close it.
+    For full functionality: <b>download this file and double-click it to open in Chrome or Edge.</b>
+  </div>
+  <div class="grid-2">
+    <div class="card center" style="padding:28px 20px;cursor:pointer" onclick="goUserGate()">
+      <div style="font-size:38px">📝</div>
+      <h2 style="font-size:17px;margin:8px 0 6px">Participant Version</h2>
+      <p style="font-size:12.5px;color:var(--muted)">Enter the access code, complete the SUS and CVI questionnaires, then print your response (Save as PDF) and send it to the research team.</p>
+      <button class="btn btn-primary" style="margin-top:12px">Start Survey →</button>
+    </div>
+    <div class="card center" style="padding:28px 20px;cursor:pointer" onclick="goDev()">
+      <div style="font-size:38px">🔐</div>
+      <h2 style="font-size:17px;margin:8px 0 6px">Developer Version</h2>
+      <p style="font-size:12.5px;color:var(--muted)">Password-protected. Import up to 20 response PDFs, get full statistics and manuscript-ready text.</p>
+      <button class="btn btn-indigo" style="margin-top:12px">Developer Login →</button>
+    </div>
+  </div>
+  <div class="note" style="margin-top:16px">🔒 <b>Privacy:</b> everything runs in your browser — nothing is uploaded anywhere. Participants send their printed/PDF response directly to the researcher. 📶 <b>Participants need no internet after opening this file.</b> The developer's PDF import needs internet once (pdf.js from a public CDN). 📄 Please type names and comments in <b>English letters</b>.</div>
+  <footer><b>BNFmax Validation Console</b> · Dr. Abdulrahman Alnijadi · College of Clinical Pharmacy, King Faisal University</footer>
+</div>
+
+<!-- ═══════════ USER GATE ═══════════ -->
+<div id="view-usergate" class="hidden">
+  <div class="center" style="margin-bottom:14px"><button class="btn btn-outline btn-sm" onclick="go('view-landing')">← Home</button></div>
+  <div class="card" style="max-width:420px;margin:0 auto;padding:32px 26px;text-align:center">
+    <div style="font-size:38px">🔑</div>
+    <h2 style="margin:8px 0 4px">Participant Access</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Enter the access code provided by the research team.</p>
+    <input type="password" id="userPass" placeholder="Access code" onkeydown="if(event.key==='Enter')userGateTry()">
+    <div id="userErr" class="hidden" style="color:var(--red);font-size:12px;margin-top:8px">Incorrect access code.</div>
+    <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="userGateTry()">Continue →</button>
+  </div>
+</div>
+
+<!-- ═══════════ USER SURVEY ═══════════ -->
+<div id="view-user" class="hidden">
+  <div class="no-print">
+    <button class="btn btn-outline btn-sm" onclick="go('view-landing')">← Home</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+      <div class="progress-txt" id="progTxt">0 of 24 items answered</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>About This Survey</h2></div>
+    <div class="card-body" style="font-size:13px">
+      <p style="margin-bottom:8px">You will complete two short instruments about the <b>BNFmax</b> psychiatric pharmacy console:</p>
+      <p style="margin-bottom:8px"><b>Part 1 — SUS:</b> 10 statements about your experience using the tool (1 = strongly disagree … 5 = strongly agree).</p>
+      <p style="margin-bottom:8px"><b>Part 2 — CVI:</b> 14 statements about the relevance of the tool's content (1 = not relevant … 4 = highly relevant).</p>
+      <p>If you have not yet used BNFmax, please try it first (enter a sample case and run the analysis). Estimated time: 8–10 minutes.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Part A — About You</h2></div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div><label class="label">Full name (English letters) *</label><input type="text" id="uName" placeholder="Your full name"></div>
+        <div><label class="label">Primary role *</label><select id="uRole">
+          <option value="">— Select role —</option>
+          <option>Clinical pharmacist</option><option>Psychiatric pharmacist</option>
+          <option>Pharmacy administrator</option><option>Pharmacy academic / faculty</option>
+          <option>Psychiatrist / physician</option><option>Pharmacy student / intern</option><option>Other</option>
+        </select></div>
+        <div><label class="label">Email (optional)</label><input type="email" id="uEmail" placeholder="you@example.com"></div>
+        <div><label class="label">Years of experience (optional)</label><select id="uYears">
+          <option value="">— Select —</option><option>Less than 1 year</option><option>1–3 years</option>
+          <option>4–7 years</option><option>8–15 years</option><option>More than 15 years</option>
+        </select></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Part B — System Usability Scale (SUS)</h2><span class="chip-badge teal">10 items</span></div>
+    <div class="card-body">
+      <div class="note">Rate each statement for the BNFmax console you have just used. Plain, everyday wording is used throughout.</div>
+      <div id="susWrap"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Part C — Content Validity (CVI)</h2><span class="chip-badge indigo">14 items</span></div>
+    <div class="card-body">
+      <div class="note">Rate how <b>relevant</b> each content element is: <b>1 = Not relevant · 2 = Somewhat relevant · 3 = Quite relevant · 4 = Highly relevant</b>. A comment is welcome (especially for ratings of 1 or 2).</div>
+      <div id="cviWrap"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Part D — Overall Comments (optional)</h2></div>
+    <div class="card-body">
+      <label class="label">What did you find most difficult or confusing in BNFmax?</label>
+      <textarea id="uDifficult" rows="2" style="margin-bottom:10px"></textarea>
+      <label class="label">What would you improve?</label>
+      <textarea id="uImprove" rows="2"></textarea>
+    </div>
+  </div>
+
+  <div class="center no-print" style="margin:18px 0">
+    <button class="btn btn-primary" style="padding:13px 38px" onclick="submitSurvey()">Submit &amp; Generate My Response →</button>
+    <button class="btn btn-outline btn-sm" onclick="clearDraft()">Clear draft</button>
+  </div>
+</div>
+
+<!-- ═══════════ RECEIPT ═══════════ -->
+<div id="view-receipt" class="hidden">
+
+  <!-- ACTION BAR — TOP -->
+  <div class="card no-print" style="border:2px solid var(--teal)">
+    <div class="card-body" style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+      <button class="btn btn-primary" style="padding:15px 38px;font-size:15px" onclick="printReceipt()">🖨 Print / Save as PDF</button>
+      <div style="flex:1;min-width:230px">
+        <div style="font-size:13.5px;font-weight:700">You're done! 🎉 Send this response to <b>Dr. Abdulrahman Alnijadi</b>.</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Click <b>Print</b> → choose <b>"Save as PDF"</b> (or print on paper) → send it directly: WhatsApp, email, or in person.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="downloadMyJSON()">.json backup</button>
+        <button class="btn btn-outline btn-sm" onclick="resetUser()">New response</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>BNFmax Validation Response — Receipt</h2><span class="chip-badge teal no-print">Reference <span id="rCode"></span></span></div>
+    <div class="card-body" id="receiptBody"></div>
+  </div>
+</div>
+
+<!-- ═══════════ DEV LOGIN ═══════════ -->
+<div id="view-devlogin" class="hidden">
+  <div class="center" style="margin-bottom:14px"><button class="btn btn-outline btn-sm" onclick="go('view-landing')">← Home</button></div>
+  <div class="card" style="max-width:420px;margin:0 auto;padding:32px 26px;text-align:center">
+    <div style="font-size:38px">🔐</div>
+    <h2 style="margin:8px 0 4px">Developer Access</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Restricted to the research team.</p>
+    <input type="password" id="devPass" placeholder="Password" onkeydown="if(event.key==='Enter')devLogin()">
+    <div id="devErr" class="hidden" style="color:var(--red);font-size:12px;margin-top:8px">Incorrect password.</div>
+    <button class="btn btn-indigo" style="margin-top:12px;width:100%" onclick="devLogin()">Unlock →</button>
+  </div>
+</div>
+
+<!-- ═══════════ DEV DASHBOARD ═══════════ -->
+<div id="view-dev" class="hidden">
+  <div class="card-head" style="border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px">
+    <h2 style="font-size:15px">🛠 Developer Dashboard</h2>
+    <div>
+      <button class="btn btn-outline btn-sm" onclick="devLogout()">Lock</button>
+      <button class="btn btn-outline btn-sm" onclick="go('view-landing')">← Home</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tabbtn-import" onclick="devTab('import')">1 · Import PDFs</button>
+    <button class="tab" id="tabbtn-sus" onclick="devTab('sus')">2 · SUS Analysis</button>
+    <button class="tab" id="tabbtn-cvi" onclick="devTab('cvi')">3 · CVI Analysis</button>
+    <button class="tab" id="tabbtn-text" onclick="devTab('text')">4 · Manuscript Text</button>
+    <button class="tab" id="tabbtn-qa" onclick="devTab('qa')">5 · QA &amp; Data</button>
+  </div>
+
+  <div id="devtab-import">
+    <div class="card">
+      <div class="card-head"><h2>Import participant response PDFs</h2><span id="devEngineChips"></span></div>
+      <div class="card-body">
+        <div class="note">Upload the response PDFs participants sent you — <b>up to 20 per batch</b>. Both formats are recognized: the printed receipt (including the machine-readable block at its bottom) and older printed receipts. Incomplete files are rejected with the exact missing items listed. Statistics are always <b>recomputed from the raw answers</b> — never trusted from the file.</div>
+        <label class="btn btn-primary" style="cursor:pointer">📁 Choose PDF files (max 20)<input type="file" id="pdfInput" accept=".pdf,application/pdf" multiple style="display:none"></label>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px">or drag &amp; drop PDFs anywhere on this page</span>
+        <div style="margin-top:12px">
+          <label class="label">Fallback — paste a .json response (if a participant's PDF failed):</label>
+          <textarea id="pasteBox" class="report" rows="3" placeholder='{"type":"bnfmax_validation_response", ...}'></textarea>
+          <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="importPaste()">Import pasted JSON</button>
+        </div>
+        <div id="importLog" class="hidden" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Loaded responses (<span id="nResp">0</span>)</h2>
+        <label style="font-size:12px;font-weight:600"><input type="checkbox" id="inclDemo" style="width:auto;accent-color:var(--indigo)"> Include DEMO data in analysis</label>
+      </div>
+      <div class="card-body">
+        <div id="respTableWrap"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addDemo()">+ Add 5 demo responses (for testing)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="devtab-sus" class="hidden"></div>
+  <div id="devtab-cvi" class="hidden"></div>
+
+  <div id="devtab-text" class="hidden">
+    <div class="card"><div class="card-head"><h2>Manuscript text — Results (SUS paragraph)</h2><button class="btn btn-outline btn-sm" onclick="copyTa('taSusPara')">Copy</button></div>
+      <div class="card-body"><textarea id="taSusPara" class="report" rows="8"></textarea></div></div>
+    <div class="card"><div class="card-head"><h2>Manuscript text — Results (CVI paragraph)</h2><button class="btn btn-outline btn-sm" onclick="copyTa('taCviPara')">Copy</button></div>
+      <div class="card-body"><textarea id="taCviPara" class="report" rows="8"></textarea></div></div>
+    <div class="card"><div class="card-head"><h2>Table — SUS respondent scores (TSV)</h2><button class="btn btn-outline btn-sm" onclick="copyTa('taSusResp')">Copy</button></div>
+      <div class="card-body"><textarea id="taSusResp" class="report" rows="6"></textarea></div></div>
+    <div class="card"><div class="card-head"><h2>Table — SUS per-item (TSV)</h2><button class="btn btn-outline btn-sm" onclick="copyTa('taSusItems')">Copy</button></div>
+      <div class="card-body"><textarea id="taSusItems" class="report" rows="8"></textarea></div></div>
+    <div class="card"><div class="card-head"><h2>Table — CVI per-item (TSV)</h2><button class="btn btn-outline btn-sm" onclick="copyTa('taCviItems')">Copy</button></div>
+      <div class="card-body"><textarea id="taCviItems" class="report" rows="8"></textarea></div></div>
+    <div class="card"><div class="card-head"><h2>Qualitative responses (all comments)</h2><button class="btn btn-outline btn-sm" onclick="copyTa('taQual')">Copy</button></div>
+      <div class="card-body"><textarea id="taQual" class="report" rows="8"></textarea></div></div>
+    <div class="card" style="border:2px solid var(--indigo)"><div class="card-head"><h2>⭐ Combined — everything in one block</h2><button class="btn btn-indigo btn-sm" onclick="copyTa('taCombined')">Copy all</button></div>
+      <div class="card-body"><p style="font-size:11px;color:var(--muted);margin-bottom:8px">All sections above merged in order: SUS paragraph → CVI paragraph → SUS respondent table → SUS per-item table → CVI per-item table → qualitative responses.</p>
+      <textarea id="taCombined" class="report" rows="16"></textarea></div></div>
+  </div>
+
+  <div id="devtab-qa" class="hidden">
+    <div class="card"><div class="card-head"><h2>Scoring self-test</h2><button class="btn btn-primary btn-sm" onclick="runSelfTest()">Run self-test</button></div>
+      <div class="card-body"><div id="selfTestOut" style="font-size:12px;color:var(--muted)">Verifies SUS scoring, modified kappa, combinatorics, t-critical values, median, sample SD, and the PDF fallback parser against known answers. All must PASS before you rely on the output.</div></div></div>
+    <div class="card"><div class="card-head"><h2>Instrument notes</h2></div>
+      <div class="card-body" style="font-size:12px">
+        <p style="margin-bottom:8px">⚠ <b>SUS item 8 wording:</b> this survey uses plain-language wording — "I found the system very <b>awkward</b> to use" — in place of the original Brooke (1996) word "cumbersome". The scoring method is unchanged. Disclose this modification in your Methods section if the venue requires exact instrument wording.</p>
+        <p>SUS adjective bands, the 68 benchmark, I-CVI criteria (1.00 / 0.83 / 0.78) and modified kappa follow the published conventions cited in your manuscript (Brooke; Bangor et al.; Sauro &amp; Lewis; Lynn; Polit &amp; Beck).</p>
+      </div></div>
+    <div class="card"><div class="card-head"><h2>Data management</h2></div>
+      <div class="card-body">
+        <button class="btn btn-outline btn-sm" onclick="exportAll()">⬇ Export all responses (.json)</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 Clear ALL stored responses</button>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">Data lives in this browser's storage on this device only. Export regularly as backup.</p>
+      </div></div>
+  </div>
+
+  <footer>Developer console — statistics recomputed from raw item-level responses on every analysis.</footer>
+</div>
+
+</div>
+<div class="toast no-print" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+"use strict";
+/* ═══════════ ERROR BANNER ═══════════ */
+window.addEventListener('error',function(e){
+  var b=document.getElementById('errBanner');
+  document.getElementById('errMsg').textContent=(e.message||'unknown')+' (line '+e.lineno+')';
+  b.classList.remove('hidden');
+});
+
+/* ═══════════ SAFE STORAGE ═══════════ */
+var MEM_LS={},MEM_SS={},STORAGE_OK=false;
+function storageTest(){
+  try{window.localStorage.setItem("__t","1");window.localStorage.removeItem("__t");STORAGE_OK=true}
+  catch(e){STORAGE_OK=false}
+  return STORAGE_OK}
+function getLS(k){try{return window.localStorage.getItem(k)}catch(e){return (k in MEM_LS)?MEM_LS[k]:null}}
+function setLS(k,v){try{window.localStorage.setItem(k,v);return}catch(e){}MEM_LS[k]=v}
+function delLS(k){try{window.localStorage.removeItem(k);return}catch(e){}delete MEM_LS[k]}
+function getSS(k){try{return window.sessionStorage.getItem(k)}catch(e){return (k in MEM_SS)?MEM_SS[k]:null}}
+function setSS(k,v){try{window.sessionStorage.setItem(k,v);return}catch(e){}MEM_SS[k]=v}
+function delSS(k){try{window.sessionStorage.removeItem(k);return}catch(e){}delete MEM_SS[k]}
+
+/* ═══════════ CONSTANTS ═══════════ */
+var PDFJS_WORKER="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+var SUS_ITEMS=["I think that I would like to use this system frequently.","I found the system unnecessarily complex.","I thought the system was easy to use.","I think that I would need the support of a technical person to be able to use this system.","I found the various functions in this system were well integrated.","I thought there was too much inconsistency in this system.","I would imagine that most people would learn to use this system very quickly.","I found the system very awkward to use.","I felt very confident using the system.","I needed to learn a lot of things before I could get going with this system."];
+var SUS_SHORT=["Frequent use","Unnecessarily complex","Easy to use","Need tech support","Well integrated","Inconsistent","Quick to learn","Awkward","Confident","Lots to learn"];
+var CVI_ITEMS=[
+{id:"C1",short:"Dose-load scoring (Gate 1)",text:"The dose-load scoring — each medication displayed as a percentage of its maximum daily dose — is relevant to psychiatric medication review."},
+{id:"C2",short:"HDAT flag (Gate 2)",text:"The high-dose antipsychotic therapy (HDAT) flag, triggered when the combined antipsychotic load exceeds 100%, is relevant to safe medication review."},
+{id:"C3",short:"Duplication detection (Gate 3)",text:"Therapeutic duplication detection (two or more medications from the same therapeutic class) is relevant."},
+{id:"C4",short:"Two-stream LAI cost model (Gate 4)",text:"The long-acting injectable (LAI) cost model — combining administration staffing and medication acquisition into a single annual figure — is relevant to pharmacy administration."},
+{id:"C5",short:"Cost-minimization cards (Gate 5)",text:"The cost-minimization opportunity cards, each carrying an intervention rationale and a cited source, are relevant."},
+{id:"C6",short:"Pharmacy administration plan (Gate 6)",text:"The pharmacy administration plan (workload, LAI schedule, documentation checklist, follow-up) is relevant to service operations."},
+{id:"C7",short:"Executive KPI deck",text:"The six-indicator executive summary (dose load, HDAT status, antipsychotic count, savings potential, LAI administration cost, LAI total cost) is relevant for pharmacy administrators."},
+{id:"C8",short:"Quality-of-life plan",text:"The quality-of-life plan across nine categories is relevant to patient-centered outcomes."},
+{id:"C9",short:"Knowledge-base breadth",text:"The breadth of the medication knowledge base (61 psychotropic medications across 22 therapeutic classes) is adequate for the tool's intended purpose."},
+{id:"C10",short:"Dose maxima appropriateness",text:"The encoded maximum doses are appropriate reference values for dose-load scoring (with routine verification against the current formulary)."},
+{id:"C11",short:"Audit & export functions",text:"The audit functions (print-optimized report, structured export, citation trail) are relevant for accountability."},
+{id:"C12",short:"Case-entry design",text:"The case-entry design (patient profile, BMI, chronic kidney disease, diagnosis and comorbidity chips, medication autocomplete) captures the clinically necessary inputs."},
+{id:"C13",short:"Model-transparency notices",text:"The standing model-transparency notices ('model estimates, not predictions') are necessary and appropriately worded."},
+{id:"C14",short:"Overall relevance to contexts",text:"The tool as a whole is relevant for its target contexts (teaching, medication-management committees, pharmacy administration)."}];
+var TCRIT={1:12.706,2:4.303,3:3.182,4:2.776,5:2.571,6:2.447,7:2.365,8:2.306,9:2.262,10:2.228,11:2.201,12:2.179,13:2.160,14:2.145,15:2.131,16:2.120,17:2.110,18:2.101,19:2.093,20:2.086,21:2.080,22:2.074,23:2.069,24:2.064,25:2.060,26:2.056,27:2.052,28:2.048,29:2.045,30:2.042,40:2.021,60:2.000,120:1.980};
+
+/* ═══════════ HELPERS ═══════════ */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function f1(x){return (Math.round(x*10)/10).toFixed(1)}
+function f2(x){return (Math.round(x*100)/100).toFixed(2)}
+function pad2(n){return (n<10?"0":"")+n}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},2200)}
+function hash(s){var h=5381;for(var i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0}return h.toString(36)}
+function tcrit(df){if(TCRIT[df])return TCRIT[df];if(df<1)return null;if(df>120)return 1.960;
+ var keys=Object.keys(TCRIT).map(Number).sort(function(a,b){return a-b});
+ for(var i=0;i<keys.length-1;i++){if(df>keys[i]&&df<keys[i+1]){var a=keys[i],b=keys[i+1];return TCRIT[a]+(TCRIT[b]-TCRIT[a])*(df-a)/(b-a)}}return 1.960}
+function mean(a){return a.reduce(function(s,x){return s+x},0)/a.length}
+function sdSample(a){if(a.length<2)return null;var m=mean(a);return Math.sqrt(a.reduce(function(s,x){return s+(x-m)*(x-m)},0)/(a.length-1))}
+function median(a){var b=a.slice().sort(function(x,y){return x-y}),n=b.length;if(!n)return null;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2}
+function choose(n,k){if(k<0||k>n||n<0)return 0;k=Math.min(k,n-k);var r=1;for(var i=1;i<=k;i++){r=r*(n-k+i)/i}return Math.round(r)}
+function susTotal(items){var s=0;for(var i=0;i<10;i++){s+=((i%2===0)?(items[i]-1):(5-items[i]))}return s*2.5}
+function susContrib(items){var c=[];for(var i=0;i<10;i++){c.push(((i%2===0)?(items[i]-1):(5-items[i])))}return c}
+function susBand(s){if(s>=84.1)return"Best imaginable";if(s>=80.8)return"Excellent";if(s>=74.1)return"Good";if(s>=62.7)return"OK";if(s>=51.7)return"Poor";return"Awful"}
+function cviCriterion(n){return n<=5?1.00:(n<=8?0.83:0.78)}
+function kappaStar(icvi,N,A){var pc=choose(N,A)*Math.pow(0.5,N);if(1-pc===0)return null;return (icvi-pc)/(1-pc)}
+function copyTa(id){var ta=$(id);ta.focus();ta.select();try{document.execCommand("copy");toast("Copied to clipboard")}catch(e){toast("Press Ctrl+C to copy")}}
+function download(filename,text,mime){var b=new Blob([text],{type:mime||"text/plain"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();
+ setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},400)}
+function go(view){["view-landing","view-usergate","view-user","view-receipt","view-devlogin","view-dev"].forEach(function(v){$(v).classList.toggle("hidden",v!==view)});window.scrollTo(0,0)}
+function enginePdf(){return typeof pdfjsLib!=="undefined"}
+function renderEngineChips(){
+ var h=(STORAGE_OK?'<span class="chip-badge green">✓ storage available</span>':'<span class="chip-badge amber">⚠ storage blocked — session only</span>')+' '+
+ (enginePdf()?'<span class="chip-badge green">✓ pdf.js ready (developer import)</span>':'<span class="chip-badge red">✖ pdf.js not loaded (internet needed)</span>');
+ var a=$("engineChips");if(a)a.innerHTML=h;
+ var b=$("devEngineChips");if(b)b.innerHTML=h}
+
+/* ═══════════ USER STATE ═══════════ */
+var DRAFT_KEY="bnfmax_user_draft_v2";
+var state={sus:new Array(10).fill(0),cvi:new Array(14).fill(0),cviComments:{}};
+var LAST=null;
+function saveDraft(){setLS(DRAFT_KEY,JSON.stringify({sus:state.sus,cvi:state.cvi,cviComments:state.cviComments,
+ name:$("uName").value,role:$("uRole").value,email:$("uEmail").value,years:$("uYears").value,
+ d1:$("uDifficult").value,d2:$("uImprove").value}))}
+function loadDraft(){var d=null;try{d=JSON.parse(getLS(DRAFT_KEY)||"null")}catch(e){}
+ if(!d)return;
+ if(d.sus&&d.sus.length===10)state.sus=d.sus;if(d.cvi&&d.cvi.length===14)state.cvi=d.cvi;if(d.cviComments)state.cviComments=d.cviComments;
+ $("uName").value=d.name||"";$("uRole").value=d.role||"";$("uEmail").value=d.email||"";$("uYears").value=d.years||"";
+ $("uDifficult").value=d.d1||"";$("uImprove").value=d.d2||""}
+function clearDraft(){if(!confirm("Clear all your answers?"))return;resetUser();toast("Draft cleared")}
+function resetUser(){delLS(DRAFT_KEY);
+ state.sus=new Array(10).fill(0);state.cvi=new Array(14).fill(0);state.cviComments={};
+ $("uName").value="";$("uRole").value="";$("uEmail").value="";$("uYears").value="";$("uDifficult").value="";$("uImprove").value="";
+ renderLikerts();updateProgress();go("view-user")}
+function goUserGate(){if(getSS("bnfmax_user")==="1"){openUser()}else{go("view-usergate");setTimeout(function(){$("userPass").focus()},50)}}
+function userGateTry(){if($("userPass").value==="123"){setSS("bnfmax_user","1");$("userPass").value="";$("userErr").classList.add("hidden");openUser()}else{$("userErr").classList.remove("hidden")}}
+function openUser(){go("view-user");renderLikerts();loadDraft();updateProgress()}
+
+function renderLikerts(){
+ var h="";
+ for(var i=0;i<10;i++){
+  h+='<div class="q" id="sus-q'+i+'"><div class="qtext"><span class="qnum">B'+(i+1)+'</span>'+esc(SUS_ITEMS[i])+'</div><div class="likrow"><span class="lik-end">Strongly disagree</span><div class="lik-btns">';
+  for(var v=1;v<=5;v++){h+='<button type="button" class="lik-btn'+(state.sus[i]===v?" on":"")+'" data-q="'+i+'" data-v="'+v+'">'+v+'</button>'}
+  h+='</div><span class="lik-end">Strongly agree</span></div></div>'}
+ $("susWrap").innerHTML=h;
+ var h2="";
+ for(var j=0;j<CVI_ITEMS.length;j++){var it=CVI_ITEMS[j];
+  h2+='<div class="q" id="cvi-q'+j+'"><div class="qtext"><span class="qnum">'+it.id+'</span>'+esc(it.text)+'</div><div class="likrow"><span class="lik-end">Not relevant</span><div class="lik-btns">';
+  for(var v2=1;v2<=4;v2++){h2+='<button type="button" class="lik-btn'+(state.cvi[j]===v2?" on":"")+'" style="width:54px" data-q="'+j+'" data-v="'+v2+'">'+v2+'</button>'}
+  h2+='</div><span class="lik-end">Highly relevant</span></div><div class="mini-input"><input type="text" data-cmt="'+it.id+'" placeholder="Optional comment on this item…" value="'+esc(state.cviComments[it.id]||"")+'"></div></div>'}
+ $("cviWrap").innerHTML=h2;
+}
+function setLikert(prefix,i,v){state[prefix][i]=v;
+ var row=$(prefix+"-q"+i);row.classList.remove("miss");
+ var btns=row.querySelectorAll(".lik-btn");
+ for(var k=0;k<btns.length;k++){btns[k].classList.toggle("on",(k+1)===v)}
+ saveDraft();updateProgress()}
+ $("susWrap").addEventListener("click",function(e){var b=e.target.closest(".lik-btn");if(b)setLikert("sus",+b.dataset.q,+b.dataset.v)});
+ $("cviWrap").addEventListener("click",function(e){var b=e.target.closest(".lik-btn");if(b)setLikert("cvi",+b.dataset.q,+b.dataset.v)});
+ $("cviWrap").addEventListener("input",function(e){var t=e.target;if(t.dataset&&t.dataset.cmt){state.cviComments[t.dataset.cmt]=t.value;saveDraft()}});
+["uName","uRole","uEmail","uYears","uDifficult","uImprove"].forEach(function(id){$(id).addEventListener("input",saveDraft);$(id).addEventListener("change",saveDraft)});
+
+function answeredCount(){return state.sus.filter(function(v){return v>=1}).length+state.cvi.filter(function(v){return v>=1}).length}
+function updateProgress(){var n=answeredCount();$("progFill").style.width=(n/24*100)+"%";
+ $("progTxt").textContent=n+" of 24 items answered"+(n===24?" — ready to submit ✓":"")}
+
+function submitSurvey(){
+ var bad=false;
+ ["uName","uRole"].forEach(function(id){var el=$(id);if(!el.value.trim()){el.style.borderColor="var(--red)";bad=true}else{el.style.borderColor=""}});
+ var firstQ=null;
+ for(var i=0;i<10;i++){if(state.sus[i]<1){$("sus-q"+i).classList.add("miss");if(!firstQ)firstQ=$("sus-q"+i)}else{$("sus-q"+i).classList.remove("miss")}}
+ for(var j=0;j<14;j++){if(state.cvi[j]<1){$("cvi-q"+j).classList.add("miss");if(!firstQ)firstQ=$("cvi-q"+j)}else{$("cvi-q"+j).classList.remove("miss")}}
+ if(bad||firstQ){toast("Please complete all required items");if(firstQ)firstQ.scrollIntoView({behavior:"smooth",block:"center"});else $("uName").scrollIntoView({behavior:"smooth",block:"center"});return}
+ buildReceipt();go("view-receipt");window.scrollTo(0,0);
+}
+
+function buildMyResponse(){
+ var ratings={};for(var j=0;j<14;j++){ratings[CVI_ITEMS[j].id]=state.cvi[j]}
+ var submittedAt=new Date().toISOString();
+ return {type:"bnfmax_validation_response",version:2,ref:"BMX-"+hash($("uName").value.trim()+submittedAt).toUpperCase().slice(0,6),
+  submittedAt:submittedAt,
+  respondent:{name:$("uName").value.trim(),role:$("uRole").value,email:$("uEmail").value.trim(),years:$("uYears").value},
+  sus:{items:state.sus.slice()},
+  cvi:{ratings:ratings,comments:JSON.parse(JSON.stringify(state.cviComments))},
+  feedback:{difficult:$("uDifficult").value.trim(),improve:$("uImprove").value.trim()}}
+}
+
+/* ── MACHINE-READABLE TEXT BLOCK ── */
+function buildMachineText(r){
+ var L=[];
+ L.push("--- BNFmax RESPONSE DATA (auto-generated) ---");
+ L.push("REF: "+r.ref);
+ L.push("NAME: "+r.respondent.name);
+ L.push("ROLE: "+r.respondent.role);
+ if(r.respondent.email)L.push("EMAIL: "+r.respondent.email);
+ if(r.respondent.years)L.push("EXPERIENCE: "+r.respondent.years);
+ L.push("SUBMITTED: "+r.submittedAt);
+ for(var i=1;i<=10;i++)L.push("SUS"+pad2(i)+": "+r.sus.items[i-1]);
+ for(var j=1;j<=14;j++)L.push("CVI"+pad2(j)+": "+r.cvi.ratings["C"+j]);
+ var cm=r.cvi.comments||{};
+ for(var k2=1;k2<=14;k2++){var c=cm["C"+k2];if(c&&String(c).trim())L.push("CMT"+pad2(k2)+": "+String(c).trim())}
+ if(r.feedback.difficult)L.push("DIFFICULT: "+r.feedback.difficult);
+ if(r.feedback.improve)L.push("IMPROVE: "+r.feedback.improve);
+ L.push("END OF RESPONSE");
+ return L.join("\n")}
+
+function buildReceipt(){
+ LAST=buildMyResponse();
+ $("rCode").textContent=LAST.ref;
+ var susT=susTotal(LAST.sus.items),band=susBand(susT);
+ var h="";
+ h+='<div class="receipt-item"><b>Respondent</b><span>'+esc(LAST.respondent.name)+'</span></div>';
+ h+='<div class="receipt-item"><b>Role</b><span>'+esc(LAST.respondent.role)+'</span></div>';
+ if(LAST.respondent.years)h+='<div class="receipt-item"><b>Experience</b><span>'+esc(LAST.respondent.years)+'</span></div>';
+ if(LAST.respondent.email)h+='<div class="receipt-item"><b>Email</b><span>'+esc(LAST.respondent.email)+'</span></div>';
+ h+='<div class="receipt-item"><b>Submitted</b><span>'+new Date(LAST.submittedAt).toLocaleString()+'</span></div>';
+ h+='<div class="receipt-item"><b>Reference code</b><span>'+esc(LAST.ref)+'</span></div>';
+ h+='<h3 style="margin:14px 0 6px;font-size:14px">Part B — SUS answers</h3>';
+ var contrib=susContrib(LAST.sus.items);
+ for(var i=0;i<10;i++){
+  h+='<div class="receipt-item"><span>B'+(i+1)+'. '+esc(SUS_ITEMS[i])+'</span><b style="white-space:nowrap">Rating '+LAST.sus.items[i]+' <span style="color:var(--muted);font-weight:400">(score '+contrib[i]+')</span></b></div>'}
+ h+='<div class="receipt-item" style="border-top:2px solid #000;margin-top:8px"><b>Your SUS total (0–100)</b><b>'+f1(susT)+' — '+band+'</b></div>';
+ h+='<h3 style="margin:14px 0 6px;font-size:14px">Part C — CVI answers</h3>';
+ var scaleName={1:"Not relevant",2:"Somewhat relevant",3:"Quite relevant",4:"Highly relevant"};
+ for(var j=0;j<14;j++){var it=CVI_ITEMS[j],cm=state.cviComments[it.id]||"";
+  h+='<div class="receipt-item"><span>'+it.id+'. '+esc(it.short)+'</span><b style="white-space:nowrap">'+LAST.cvi.ratings[it.id]+' — '+scaleName[LAST.cvi.ratings[it.id]]+'</b></div>';
+  if(cm)h+='<div style="font-size:11px;color:var(--muted);padding-left:36px;margin-top:-2px">Comment: '+esc(cm)+'</div>'}
+ if(LAST.feedback.difficult||LAST.feedback.improve){
+  h+='<h3 style="margin:14px 0 6px;font-size:14px">Part D — Comments</h3>';
+  if(LAST.feedback.difficult)h+='<div class="receipt-item"><span>Most difficult:</span><span style="text-align:right;max-width:60%">'+esc(LAST.feedback.difficult)+'</span></div>';
+  if(LAST.feedback.improve)h+='<div class="receipt-item"><span>Would improve:</span><span style="text-align:right;max-width:60%">'+esc(LAST.feedback.improve)+'</span></div>'}
+ /* machine-readable block — included on screen AND in print, so the printed PDF is always parseable */
+ h+='<div class="machine-block"><div class="machine-title">Machine-readable block — for automated analysis (do not edit; keep it in the printed file)</div><pre class="machine-pre">'+esc(buildMachineText(LAST))+'</pre></div>';
+ $("receiptBody").innerHTML=h;
+}
+
+/* ── PRINT (robust: popup → iframe → window fallback) ── */
+function buildPrintHtml(){
+ var inner=$("receiptBody").innerHTML||"";
+ var ref=LAST?esc(LAST.ref):"";
+ var S='<scr'+'ipt>',E='</scr'+'ipt>';
+ return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>BNFmax Validation Response</title><style>'+
+ 'body{font-family:Arial,Helvetica,sans-serif;color:#111;font-size:12px;max-width:720px;margin:0 auto;padding:24px}'+
+ 'h1{font-size:16px;text-align:center;margin:0 0 2px}'+
+ '.refline{text-align:center;font-size:11px;color:#555;margin-bottom:14px}'+
+ 'h3{font-size:13px;margin:14px 0 6px}'+
+ '.receipt-item{padding:6px 0;border-bottom:1px dashed #999;font-size:12px;display:flex;justify-content:space-between;gap:12px}'+
+ '.machine-block{margin-top:16px;border-top:1px dashed #999;padding-top:10px}'+
+ '.machine-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555;margin-bottom:5px}'+
+ '.machine-pre{font-family:"Courier New",monospace;font-size:9.5px;white-space:pre-wrap;word-break:break-all;border:1px solid #999;padding:8px;line-height:1.5}'+
+ '@media print{body{padding:0}}'+
+ '</style></head><body>'+
+ '<h1>BNFmax Validation Response — Receipt</h1>'+
+ '<div class="refline">Reference: '+ref+'</div>'+
+ inner+
+ S+'window.onload=function(){setTimeout(function(){window.focus();window.print()},250)}'+E+
+ '</body></html>'}
+function printReceipt(){
+ if(!LAST){toast("Nothing to print yet");return}
+ var html=buildPrintHtml();
+ try{var opened=window.open("","_blank","width=800,height=900");
+  if(opened&&opened.document){opened.document.write(html);opened.document.close();return}}catch(e){}
+ try{
+  var f=document.createElement("iframe");
+  f.setAttribute("style","position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0");
+  document.body.appendChild(f);
+  var d=f.contentWindow.document;d.open();d.write(html);d.close();
+  setTimeout(function(){try{f.contentWindow.focus();f.contentWindow.print()}catch(e){window.print()}},400);
+  return}catch(e){}
+ window.print()}
+
+function downloadMyJSON(){if(!LAST)return;
+ var safe=(LAST.respondent.name||"participant").replace(/[^a-zA-Z0-9]+/g,"_");
+ download("bnfmax_response_"+safe+"_"+LAST.submittedAt.slice(0,10)+".json",JSON.stringify(LAST,null,2),"application/json");
+ toast("JSON downloaded")}
+
+/* ═══════════ DEV: STORE ═══════════ */
+var STORE_KEY="bnfmax_dev_store_v3";
+var devStore=[];
+function loadStore(){var raw=getLS(STORE_KEY);try{devStore=JSON.parse(raw||"[]")}catch(e){devStore=[]}
+ if(!Array.isArray(devStore))devStore=[];
+ sanitizeStore()}
+function saveStore(){setLS(STORE_KEY,JSON.stringify(devStore));
+ if(!STORAGE_OK)toast("Storage blocked — data kept in memory only for this session")}
+function sanitizeStore(){
+ var clean=[],dropped=0;
+ devStore.forEach(function(d){
+  if(!d||!d.rec){dropped++;return}
+  var rec=d.rec,err=validateRec(rec);
+  if(err){try{rec=normalizeRec(rec);err=validateRec(rec)}catch(e){err="normalize failed"}}
+  if(err){dropped++;return}
+  rec.submittedAt=rec.submittedAt||new Date().toISOString();
+  rec.ref=rec.ref||("LEG-"+hash((rec.respondent&&rec.respondent.name||"")+(rec.submittedAt||"")).toUpperCase().slice(0,6));
+  clean.push({rec:rec,meta:{source:(d.meta&&d.meta.source)||"legacy",importedAt:(d.meta&&d.meta.importedAt)||""}})});
+ if(dropped>0){devStore=clean;saveStore()}else{devStore=clean}}
+function goDev(){if(getSS("bnfmax_dev")==="1"){openDev()}else{go("view-devlogin");setTimeout(function(){$("devPass").focus()},50)}}
+function devLogin(){if($("devPass").value==="alnijadi"){setSS("bnfmax_dev","1");$("devPass").value="";$("devErr").classList.add("hidden");openDev()}else{$("devErr").classList.remove("hidden")}}
+function devLogout(){delSS("bnfmax_dev");go("view-landing")}
+function openDev(){go("view-dev");loadStore();renderRespTable();renderSUS();renderCVI();buildTexts();renderEngineChips()}
+function devTab(t){["import","sus","cvi","text","qa"].forEach(function(x){
+ $("devtab-"+x).classList.toggle("hidden",x!==t);
+ $("tabbtn-"+x).classList.toggle("on",x===t)});window.scrollTo(0,0)}
+function activeRecs(){var inc=$("inclDemo").checked;return devStore.filter(function(d){return inc||!d.rec.demo}).map(function(d){return d.rec})}
+
+/* ── VALIDATION & NORMALIZATION ── */
+function validateRec(r){
+ if(!r||typeof r!=="object")return"not an object";
+ var sus=r.sus&&r.sus.items?r.sus.items:null;
+ if(!sus||sus.length!==10)return"SUS items missing (need 10)";
+ for(var i=0;i<10;i++){var v=Number(sus[i]);if(!(v>=1&&v<=5&&v===Math.floor(v)))return"SUS item "+(i+1)+" out of range 1–5"}
+ var rat=r.cvi&&r.cvi.ratings?r.cvi.ratings:null;
+ if(!rat)return"CVI ratings missing";
+ for(var j=0;j<CVI_ITEMS.length;j++){var id=CVI_ITEMS[j].id;var rv=Number(rat[id]);
+  if(!(rv>=1&&rv<=4&&rv===Math.floor(rv)))return"CVI item "+id+" missing or out of range 1–4"}
+ return null}
+function normalizeRec(r){
+ var sus=r.sus&&r.sus.items?r.sus.items:r.sus;
+ var rat=r.cvi&&(r.cvi.ratings||r.cvi);
+ var ratings={};for(var j=0;j<CVI_ITEMS.length;j++){ratings[CVI_ITEMS[j].id]=Number(rat[CVI_ITEMS[j].id])}
+ return {type:"bnfmax_validation_response",version:r.version||1,
+  ref:r.ref||("IMP-"+hash((r.respondent&&r.respondent.name||"")+(r.submittedAt||"")).toUpperCase().slice(0,6)),
+  submittedAt:r.submittedAt||new Date().toISOString(),
+  respondent:r.respondent||{name:"(unnamed)",role:"",email:"",years:""},
+  sus:{items:sus.map(Number)},cvi:{ratings:ratings,comments:(r.cvi&&r.cvi.comments)||{}},
+  feedback:r.feedback||{difficult:"",improve:""},
+  demo:r.demo===true}}
+function importRec(rec,source){
+ var err=validateRec(rec);if(err)return{ok:false,reason:err};
+ rec=normalizeRec(rec);
+ for(var i=0;i<devStore.length;i++){
+  if(devStore[i].rec.ref===rec.ref)return{ok:false,reason:"duplicate (REF "+rec.ref+" already loaded)"}}
+ devStore.push({rec:rec,meta:{source:source||"import",importedAt:new Date().toISOString()}});
+ saveStore();return{ok:true,rec:rec}}
+
+/* ── PDF PARSING (pdf.js) ── */
+var KNOWN_KEYS={REF:1,NAME:1,ROLE:1,EMAIL:1,EXPERIENCE:1,SUBMITTED:1,DIFFICULT:1,IMPROVE:1};
+for(var _i=1;_i<=10;_i++)KNOWN_KEYS["SUS"+pad2(_i)]=1;
+for(var _j=1;_j<=14;_j++){KNOWN_KEYS["CVI"+pad2(_j)]=1;KNOWN_KEYS["CMT"+pad2(_j)]=1}
+function normalizeKey(k){
+ var m=k.match(/^(SUS|CVI|CMT)(\d)$/);
+ if(m)return m[1]+pad2(+m[2]);
+ return k}
+
+async function extractPdfText(file){
+ var buf=await file.arrayBuffer();
+ var pdf=await pdfjsLib.getDocument({data:buf}).promise;
+ var out=[];
+ for(var p=1;p<=pdf.numPages;p++){
+  var page=await pdf.getPage(p);
+  var tc=await page.getTextContent();
+  var lines={};
+  tc.items.forEach(function(it){
+   if(!it.str||!it.str.trim())return;
+   var y=Math.round(it.transform[5]*10)/10;
+   (lines[y]=lines[y]||[]).push({s:it.str,x:it.transform[4]})});
+  Object.keys(lines).map(Number).sort(function(a,b){return b-a}).forEach(function(y2){
+   var row=lines[y2].sort(function(a,b){return a.x-b.x}).map(function(it2){return it2.s}).join(" ").trim();
+   if(row)out.push(row)})}
+ return out.join("\n")}
+
+/* Fallback parser: reads the human receipt layout ("B3. … Rating 5 (score 4)", "C1. … 4 — Quite relevant") */
+function parseReceiptRows(txt){
+ var res={sus:{},cvi:{},comments:{},fields:{},lastC:0};
+ txt.split(/\r?\n/).forEach(function(rawLn){
+  var ln=rawLn.replace(/\s+/g," ").trim();
+  if(!ln)return;
+  var m;
+  m=ln.match(/^B(\d{1,2})\.\s+.*?\bRating\s*[:\s]?\s*([1-5])(?:\s*\(score\s*([0-4])\))?/);
+  if(m){res.sus[+m[1]]=+m[2];return}
+  m=ln.match(/^C(\d{1,2})\.\s+.*?\s([1-4])\s*[—–-]\s*(Not relevant|Somewhat relevant|Quite relevant|Highly relevant)/);
+  if(m){res.cvi[+m[1]]=+m[2];res.lastC=+m[1];return}
+  m=ln.match(/^Comment:\s+(.+)$/);
+  if(m&&res.lastC){res.comments[res.lastC]=(res.comments[res.lastC]?res.comments[res.lastC]+" ":"")+m[1].trim();return}
+  m=ln.match(/^Respondent\s+(.+)$/);if(m){res.fields.NAME=res.fields.NAME||m[1].trim();return}
+  m=ln.match(/^Role\s+(.+)$/);if(m){res.fields.ROLE=res.fields.ROLE||m[1].trim();return}
+  m=ln.match(/^Reference code\s+(.+)$/);if(m){res.fields.REF=res.fields.REF||m[1].trim();return}
+  m=ln.match(/^Email\s+(.+)$/);if(m){res.fields.EMAIL=res.fields.EMAIL||m[1].trim();return}
+  m=ln.match(/^Experience\s+(.+)$/);if(m){res.fields.EXPERIENCE=res.fields.EXPERIENCE||m[1].trim();return}
+  m=ln.match(/^Most difficult:\s+(.+)$/);if(m){res.fields.DIFFICULT=m[1].trim();return}
+  m=ln.match(/^Would improve:\s+(.+)$/);if(m){res.fields.IMPROVE=m[1].trim();return}
+ });
+ return res}
+
+function parseResponseText(txt,srcName){
+ var warns=[];
+ /* Pass 1 — machine block (KEY: value), tolerant of spacing, stops at END */
+ var ended=false,fields={};
+ var keyRe=/^\s*([A-Z][A-Z0-9_]{1,13})\s*:\s?(.*)$/;
+ txt.split(/\r?\n/).forEach(function(rawLn){
+  if(ended)return;
+  var ln=rawLn.trim();if(!ln)return;
+  if(/END OF RESPONSE/.test(ln)){ended=true;return}
+  var m=ln.match(keyRe);
+  if(m){var k=normalizeKey(m[1]);
+   if(KNOWN_KEYS[k]){fields[k]=(fields[k]?fields[k]+" ":"")+m[2].trim()}}
+ });
+ /* Pass 2 — fallback: human receipt rows (fills whatever pass 1 missed) */
+ var fb=parseReceiptRows(txt);
+ var usedFallback=false;
+ var missing=[],sus=[];
+ for(var i=1;i<=10;i++){
+  var v=null,rawM=fields["SUS"+pad2(i)];
+  if(rawM!=null){var p=parseInt(rawM,10);if(p>=1&&p<=5)v=p}
+  if(v==null&&fb.sus[i]!=null){v=fb.sus[i];usedFallback=true}
+  if(v==null){missing.push("SUS"+pad2(i));sus.push(0)}else{sus.push(v)}}
+ var ratings={},missingC=[];
+ for(var j=1;j<=14;j++){
+  var vC=null,rawC=fields["CVI"+pad2(j)];
+  if(rawC!=null){var pC=parseInt(rawC,10);if(pC>=1&&pC<=4)vC=pC}
+  if(vC==null&&fb.cvi[j]!=null){vC=fb.cvi[j];usedFallback=true}
+  if(vC==null){missingC.push("CVI"+pad2(j));ratings["C"+j]=0}else{ratings["C"+j]=vC}}
+ var allMissing=missing.concat(missingC);
+ if(allMissing.length===24)return{ok:false,reason:"no recognizable SUS/CVI answers — this PDF does not look like a BNFmax response receipt"};
+ if(allMissing.length)return{ok:false,reason:"incomplete — missing: "+allMissing.join(", ")};
+ if(usedFallback)warns.push("parsed from printed-receipt layout (machine block absent) — for a cleaner file, the participant can re-print from the updated app");
+ if(!/END OF RESPONSE/.test(txt))warns.push("END marker not found");
+ var comments={};
+ for(var k=1;k<=14;k++){
+  var c=fields["CMT"+pad2(k)];
+  if(!c&&fb.comments[k]){c=fb.comments[k];usedFallback=true}
+  if(c&&String(c).trim())comments["C"+k]=String(c).trim()}
+ var fFallback=(function(f1o,f2o){var o={};["NAME","ROLE","EMAIL","EXPERIENCE","REF","DIFFICULT","IMPROVE"].forEach(function(kk){o[kk]=f1o[kk]||f2o[kk]||""});return o})(
+  {NAME:fields.NAME,ROLE:fields.ROLE,EMAIL:fields.EMAIL,EXPERIENCE:fields.EXPERIENCE,REF:fields.REF,DIFFICULT:fields.DIFFICULT,IMPROVE:fields.IMPROVE},
+  {NAME:fb.fields.NAME,ROLE:fb.fields.ROLE,EMAIL:fb.fields.EMAIL,EXPERIENCE:fb.fields.EXPERIENCE,REF:fb.fields.REF,DIFFICULT:fb.fields.DIFFICULT,IMPROVE:fb.fields.IMPROVE});
+ var rec={type:"bnfmax_validation_response",version:2,
+  ref:fFallback.REF||("PDF-"+hash((fFallback.NAME||"")+(fields.SUBMITTED||srcName)).toUpperCase().slice(0,6)),
+  submittedAt:fields.SUBMITTED||new Date().toISOString(),
+  respondent:{name:fFallback.NAME||"(unnamed)",role:fFallback.ROLE||"",email:fFallback.EMAIL||"",years:fFallback.EXPERIENCE||""},
+  sus:{items:sus},cvi:{ratings:ratings,comments:comments},
+  feedback:{difficult:fFallback.DIFFICULT||"",improve:fFallback.IMPROVE||""},demo:false};
+ if(!fFallback.REF)warns.push("no REF — assigned one");
+ return{ok:true,rec:rec,warns:warns}}
+
+async function handlePdfFiles(files){
+ if(!enginePdf()){showImportLog([["(engine)","✖ pdf.js not loaded — check internet connection, then retry"]],0);return}
+ var list=Array.prototype.slice.call(files).filter(function(f){return /\.pdf$/i.test(f.name)||f.type==="application/pdf"});
+ if(!list.length){toast("No PDF files found in the selection");return}
+ var skipped=list.length-20;
+ list=list.slice(0,20);
+ var results=[],okN=0;
+ for(var i=0;i<list.length;i++){
+  var f=list[i];
+  try{
+   var txt=await extractPdfText(f);
+   var pr=parseResponseText(txt,f.name);
+   if(pr.ok){var ir=importRec(pr.rec,f.name);
+    if(ir.ok){okN++;
+     var w=pr.warns&&pr.warns.length?" (warning: "+pr.warns.join("; ")+")":"";
+     results.push([f.name,"✓ imported — "+(pr.rec.respondent.name||"(unnamed)")+", REF "+pr.rec.ref+w])}
+    else results.push([f.name,"✖ "+ir.reason])}
+   else results.push([f.name,"✖ "+pr.reason])}
+  catch(e){results.push([f.name,"✖ unreadable PDF: "+(e.message||e)])}}
+ if(skipped>0)results.push(["(notice)","⚠ "+skipped+" file(s) beyond the 20-file limit were not processed"]);
+ showImportLog(results,okN);
+}
+function showImportLog(results,okN){
+ var lg=$("importLog");lg.classList.remove("hidden");
+ var h='<div class="'+(okN>0?"ok-box":"warn")+'"><b>'+okN+'</b> of '+results.length+' file(s) imported.</div><div style="font-size:12px">';
+ results.forEach(function(r){h+='<div style="padding:3px 0;border-bottom:1px dashed var(--border)">📄 <b>'+esc(r[0])+'</b> — '+esc(r[1])+'</div>'});
+ h+='</div>';lg.innerHTML=h;
+ renderRespTable();renderSUS();renderCVI();buildTexts();
+ if(okN>0)toast(okN+" response(s) imported")}
+function importPaste(){
+ var raw;try{raw=JSON.parse($("pasteBox").value)}catch(e){showImportLog([["(pasted)","✖ invalid JSON"]],0);return}
+ var r=importRec(raw,"pasted JSON");
+ showImportLog([["(pasted)",r.ok?"✓ imported — "+(r.rec.respondent.name||"(unnamed)")+", REF "+r.rec.ref:"✖ "+r.reason]],r.ok?1:0);
+ if(r.ok)$("pasteBox").value=""}
+
+ $("pdfInput").addEventListener("change",function(e){if(e.target.files.length)handlePdfFiles(e.target.files);e.target.value=""});
+document.addEventListener("dragover",function(e){e.preventDefault()});
+document.addEventListener("drop",function(e){e.preventDefault();
+ if($("view-dev").classList.contains("hidden"))return;
+ if(e.dataTransfer.files.length)handlePdfFiles(e.dataTransfer.files)});
+ $("inclDemo").addEventListener("change",function(){renderRespTable();renderSUS();renderCVI();buildTexts()});
+
+/* ── DEMO DATA ── */
+function addDemo(){
+ var names=["Demo Expert One","Demo Expert Two","Demo Expert Three","Demo Expert Four","Demo Expert Five"];
+ var roles=["Clinical pharmacist","Psychiatric pharmacist","Pharmacy academic / faculty","Pharmacy administrator","Clinical pharmacist"];
+ var susP=[[5,2,4,2,4,3,5,2,4,2],[4,1,5,2,4,1,5,2,4,1],[3,3,3,3,3,3,3,3,3,3],[5,1,4,1,5,2,4,1,5,2],[4,3,5,2,4,2,4,3,5,2]];
+ var cviP=[[4,4,4,4,4,4,4,4,4,3,4,4,4,4],[4,4,4,4,4,4,4,4,3,3,4,4,4,4],[3,3,3,3,3,3,3,3,3,2,3,3,4,3],[4,4,4,4,4,4,4,4,4,4,4,4,4,4],[4,3,4,4,4,4,4,4,4,4,4,4,4,4]];
+ for(var i=0;i<5;i++){var ratings={};for(var j=0;j<14;j++){ratings[CVI_ITEMS[j].id]=cviP[i][j]}
+  importRec({type:"bnfmax_validation_response",version:2,demo:true,ref:"DEMO"+pad2(i+1),
+   submittedAt:new Date(Date.now()-i*86400000).toISOString(),
+   respondent:{name:names[i],role:roles[i],email:"",years:["8–15 years","4–7 years","More than 15 years","1–3 years","4–7 years"][i]},
+   sus:{items:susP[i]},cvi:{ratings:ratings,comments:i===2?{C10:"Dose ceilings vary by formulation; needs verification."}:{}},
+   feedback:{difficult:i===0?"The LAI staffing selector was initially unclear.":"",improve:i===3?"Add Arabic interface.":""}},"DEMO")}
+ toast("5 demo responses added (excluded from analysis unless toggled)")}
+function delResp(i){if(!confirm("Delete response from "+(devStore[i]&&devStore[i].rec.respondent.name||"(unnamed)")+"?"))return;
+ devStore.splice(i,1);saveStore();renderRespTable();renderSUS();renderCVI();buildTexts()}
+
+/* ── RESPONSES TABLE ── */
+function renderRespTable(){
+ $("nResp").textContent=devStore.length;
+ if(!devStore.length){$("respTableWrap").innerHTML='<p style="color:var(--muted);font-size:13px">No responses loaded yet. Import participant PDFs above, or add demo data to explore the analysis.</p>';return}
+ var h='<div style="overflow-x:auto"><table class="t"><tr><th class="num">#</th><th>REF</th><th>Name</th><th>Role</th><th>Submitted</th><th class="num">SUS</th><th class="num">Type</th><th class="num">Source</th><th class="num"></th></tr>';
+ devStore.forEach(function(d,i){var rec=d.rec,t=susTotal(rec.sus.items),src=(d.meta&&d.meta.source)||"—";
+  h+='<tr><td class="num">'+(i+1)+'</td><td style="font-size:10px">'+esc(rec.ref||"—")+'</td><td>'+esc(rec.respondent.name)+'</td><td>'+esc(rec.respondent.role||"—")+'</td><td>'+new Date(rec.submittedAt).toLocaleDateString()+'</td><td class="num"><b>'+f1(t)+'</b></td><td class="num">'+(rec.demo?'<span class="chip-badge amber">DEMO</span>':'<span class="chip-badge teal">real</span>')+'</td><td class="num" style="font-size:10px;color:var(--muted)">'+esc(src)+'</td><td class="num"><button class="btn btn-danger btn-sm" onclick="delResp('+i+')">✕</button></td></tr>'});
+ h+='</table></div>';$("respTableWrap").innerHTML=h}
+
+/* ── SUS ANALYSIS ── */
+function susStats(recs){
+ var rows=recs.map(function(r){return{name:r.respondent.name,role:r.respondent.role,
+  items:(r.sus&&r.sus.items?r.sus.items:[]).slice(),total:susTotal(r.sus.items),
+  date:(r.submittedAt||"").slice(0,10)}});
+ var totals=rows.map(function(r){return r.total});
+ var n=totals.length,st={n:n,rows:rows};
+ if(!n)return st;
+ st.mean=mean(totals);st.sd=sdSample(totals);st.med=median(totals);st.min=Math.min.apply(null,totals);st.max=Math.max.apply(null,totals);
+ if(n>=2&&st.sd!==null){var t=tcrit(n-1);st.ci=[st.mean-t*st.sd/Math.sqrt(n),st.mean+t*st.sd/Math.sqrt(n)]}
+ st.above68=totals.filter(function(x){return x>68}).length;
+ st.pct68=Math.round(st.above68/n*100);
+ st.itemAdj=[];st.itemRaw=[];
+ for(var i=0;i<10;i++){var adj=[],raw=[];
+  rows.forEach(function(r){adj.push(susContrib(r.items)[i]);raw.push(r.items[i])});
+  st.itemAdj.push(mean(adj));st.itemRaw.push(mean(raw))}
+ return st}
+function renderSUS(){
+ var recs=activeRecs(),st=susStats(recs),el=$("devtab-sus");
+ if(!st.n){el.innerHTML='<div class="card"><div class="card-body" style="color:var(--muted)">No responses available for SUS analysis'+(devStore.length?' — demo data is excluded; tick "Include DEMO data" in tab 1 to explore.':'')+'. Import PDFs in tab 1.</div></div>';return}
+ var band=susBand(st.mean);
+ var h='<div class="kpi-row">'+
+  '<div class="kpi"><div class="k-label">Participants (n)</div><div class="k-val">'+st.n+'</div></div>'+
+  '<div class="kpi"><div class="k-label">Mean SUS (0–100)</div><div class="k-val">'+f1(st.mean)+'</div><div class="k-sub">'+band+'</div></div>'+
+  '<div class="kpi"><div class="k-label">SD (sample)</div><div class="k-val">'+(st.sd!=null?f1(st.sd):"—")+'</div></div>'+
+  '<div class="kpi indigo"><div class="k-label">95% CI (t)</div><div class="k-val" style="font-size:15px">'+(st.ci?f1(st.ci[0])+"–"+f1(st.ci[1]):"—")+'</div></div>'+
+  '<div class="kpi"><div class="k-label">Median</div><div class="k-val">'+f1(st.med)+'</div></div>'+
+  '<div class="kpi"><div class="k-label">Range</div><div class="k-val" style="font-size:15px">'+f1(st.min)+"–"+f1(st.max)+'</div></div>'+
+  '<div class="kpi '+(st.mean>68?"":"amber")+'"><div class="k-label">Above 68 benchmark</div><div class="k-val">'+st.above68+'/'+st.n+'</div><div class="k-sub">'+st.pct68+'%</div></div></div>';
+ var bands=[["< 51.7 (Awful)",0,51.69],["51.7–62.6 (Poor)",51.7,62.69],["62.7–74.0 (OK)",62.7,74.09],["74.1–80.7 (Good)",74.1,80.79],["80.8–84.0 (Excellent)",80.8,84.09],["≥ 84.1 (Best imaginable)",84.1,101]];
+ var counts=bands.map(function(b){return st.rows.filter(function(r){return r.total>=b[1]&&r.total<=b[2]}).length});
+ var mx=Math.max.apply(null,counts.concat([1]));
+ h+='<div class="card"><div class="card-head"><h2>Distribution of total SUS scores</h2></div><div class="card-body">';
+ bands.forEach(function(b,i){h+='<div class="dist-row"><span class="dist-lbl">'+b[0]+'</span><div class="dist-bar"><div class="dist-fill" style="width:'+(counts[i]/mx*100)+'%"></div></div><span class="dist-n">'+counts[i]+'</span></div>'});
+ h+='</div></div>';
+ h+='<div class="card"><div class="card-head"><h2>Respondent scores</h2></div><div class="card-body"><div style="overflow-x:auto"><table class="t"><tr><th>Name</th><th>Role</th><th class="num">Total (0–100)</th><th class="num">Band</th></tr>';
+ st.rows.forEach(function(r){h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.role||"—")+'</td><td class="num"><b>'+f1(r.total)+'</b></td><td class="num">'+susBand(r.total)+'</td></tr>'});
+ h+='</table></div></div></div>';
+ var sorted=st.itemAdj.map(function(v,i){return{i:i,v:v}}).sort(function(a,b){return a.v-b.v});
+ h+='<div class="card"><div class="card-head"><h2>Per-item results</h2><span style="font-size:10px;color:var(--muted)">adjusted = reversed-scored contribution (0–4)</span></div><div class="card-body"><div style="overflow-x:auto"><table class="t"><tr><th class="num">Item</th><th>Statement</th><th class="num">Raw mean (1–5)</th><th class="num">Adjusted mean (0–4)</th></tr>';
+ for(var i=0;i<10;i++){h+='<tr><td class="num"><b>B'+(i+1)+'</b></td><td>'+esc(SUS_ITEMS[i])+'</td><td class="num">'+f2(st.itemRaw[i])+'</td><td class="num"><b>'+f2(st.itemAdj[i])+'</b></td></tr>'}
+ h+='</table></div><p style="font-size:11px;color:var(--muted);margin-top:8px">Lowest-scoring items: B'+(sorted[0].i+1)+' ("'+esc(SUS_SHORT[sorted[0].i])+'", adjusted '+f2(sorted[0].v)+') and B'+(sorted[1].i+1)+' ("'+esc(SUS_SHORT[sorted[1].i])+'", adjusted '+f2(sorted[1].v)+').</p></div></div>';
+ el.innerHTML=h}
+
+/* ── CVI ANALYSIS ── */
+function cviStats(recs){
+ var n=recs.length,st={n:n,M:CVI_ITEMS.length,items:[],comments:[]};
+ if(!n)return st;
+ CVI_ITEMS.forEach(function(it){
+  var ratings=recs.map(function(r){return Number(r.cvi.ratings[it.id])});
+  var cnt={1:0,2:0,3:0,4:0};ratings.forEach(function(v){cnt[v]++});
+  var A=cnt[3]+cnt[4],icvi=A/n;
+  st.items.push({id:it.id,short:it.short,cnt:cnt,A:A,n:n,icvi:icvi,kappa:kappaStar(icvi,n,A)})});
+ st.sAve=mean(st.items.map(function(x){return x.icvi}));
+ st.sUA=st.items.filter(function(x){return x.icvi===1}).length/st.M;
+ st.crit=cviCriterion(n);
+ recs.forEach(function(r){var cm=[];
+  CVI_ITEMS.forEach(function(it){var c=r.cvi.comments&&r.cvi.comments[it.id];if(c)cm.push(it.id+": "+c)});
+  if(cm.length||r.feedback.difficult||r.feedback.improve)st.comments.push({name:r.respondent.name,role:r.respondent.role,items:cm,difficult:r.feedback.difficult,improve:r.feedback.improve})});
+ return st}
+function renderCVI(){
+ var recs=activeRecs(),st=cviStats(recs),el=$("devtab-cvi");
+ if(!st.n){el.innerHTML='<div class="card"><div class="card-body" style="color:var(--muted)">No responses available for CVI analysis. Import PDFs in tab 1.</div></div>';return}
+ var flagged=st.items.filter(function(x){return x.icvi<st.crit});
+ var h='<div class="kpi-row">'+
+ '<div class="kpi"><div class="k-label">Experts (n)</div><div class="k-val">'+st.n+'</div></div>'+
+ '<div class="kpi"><div class="k-label">Items (M)</div><div class="k-val">'+st.M+'</div></div>'+
+ '<div class="kpi '+(st.sAve>=0.9?"":"amber")+'"><div class="k-label">S-CVI/Ave</div><div class="k-val">'+f2(st.sAve)+'</div><div class="k-sub">criterion ≥ 0.90</div></div>'+
+ '<div class="kpi indigo"><div class="k-label">S-CVI/UA</div><div class="k-val">'+f2(st.sUA)+'</div></div>'+
+ '<div class="kpi '+(flagged.length?"red":"")+'"><div class="k-label">Items below criterion</div><div class="k-val">'+flagged.length+'</div><div class="k-sub">I-CVI ≥ '+f2(st.crit)+' (n='+st.n+')</div></div></div>';
+ h+='<div class="card"><div class="card-head"><h2>Per-item CVI</h2><span style="font-size:10px;color:var(--muted)">k* = modified kappa (Polit &amp; Beck)</span></div><div class="card-body"><div style="overflow-x:auto"><table class="t"><tr><th class="num">Item</th><th>Content element</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">Agree (3–4)</th><th class="num">I-CVI</th><th class="num">k*</th><th class="num">Flag</th></tr>';
+ st.items.forEach(function(x){var flag=x.icvi<st.crit;
+  h+='<tr><td class="num"><b>'+x.id+'</b></td><td>'+esc(x.short)+'</td><td class="num">'+x.cnt[1]+'</td><td class="num">'+x.cnt[2]+'</td><td class="num">'+x.cnt[3]+'</td><td class="num">'+x.cnt[4]+'</td><td class="num">'+x.A+'/'+x.n+'</td><td class="num"><b>'+f2(x.icvi)+'</b></td><td class="num">'+(x.kappa==null?"—":f2(x.kappa))+'</td><td class="num">'+(flag?'<span class="chip-badge red">below</span>':'<span class="chip-badge green">ok</span>')+'</td></tr>'});
+ h+='</table></div><p style="font-size:11px;color:var(--muted);margin-top:8px">Applicable I-CVI criterion for n='+st.n+' experts: <b>'+f2(st.crit)+'</b> (Lynn 1986: 1.00 for ≤5 experts, 0.83 for 6–8, 0.78 for ≥9; modified kappa per Polit, Beck &amp; Owen 2007).</p>';
+ if(flagged.length)h+='<div class="warn" style="margin-top:8px"><b>Flagged items:</b> '+flagged.map(function(x){return x.id+" ("+f2(x.icvi)+")"}).join(", ")+' — revise or delete these items before the final round.</div>';
+ h+='</div></div>';
+ el.innerHTML=h}
+
+/* ── MANUSCRIPT TEXT ── */
+function rolesLine(recs){
+ var m={};recs.forEach(function(r){var rr=(r.respondent.role||"unspecified").trim();m[rr]=(m[rr]||0)+1});
+ return Object.keys(m).map(function(k){return k+(m[k]>1?" ×"+m[k]:"")}).join(", ")}
+function buildTexts(){
+ var recs=activeRecs(),st=susStats(recs),cv=cviStats(recs);
+ var ids=["taSusPara","taCviPara","taSusResp","taSusItems","taCviItems","taQual","taCombined"];
+ if(!st.n){ids.forEach(function(id){$(id).value="(no responses loaded)"});return}
+ var band=susBand(st.mean);
+ var sorted=st.itemAdj.map(function(v,i){return{i:i,v:v}}).sort(function(a,b){return a.v-b.v});
+ var susPara="The SUS was administered to "+st.n+" participant"+(st.n>1?"s":"")+" ("+rolesLine(recs)+"). "+
+ "The mean total SUS score was "+f1(st.mean)+" (SD = "+(st.sd!=null?f1(st.sd):"not computable for n = 1")+"; "+
+ (st.ci?"95% CI "+f1(st.ci[0])+"–"+f1(st.ci[1]):"95% CI not computable for n = 1")+"; median = "+f1(st.med)+"; range = "+f1(st.min)+"–"+f1(st.max)+
+ "), corresponding to the adjective band \""+band+"\" on the Bangor et al. adjective scale, "+
+ (st.mean>68?"above":"below")+" the benchmark average of 68 ("+st.pct68+"% of participants scored above 68). "+
+ "The lowest-scoring items were item B"+(sorted[0].i+1)+" (\""+SUS_ITEMS[sorted[0].i]+"\"; adjusted mean "+f2(sorted[0].v)+") and item B"+(sorted[1].i+1)+" (\""+SUS_ITEMS[sorted[1].i]+"\"; adjusted mean "+f2(sorted[1].v)+"); "+
+ "the highest-scoring item was B"+(sorted[sorted.length-1].i+1)+" (\""+SUS_ITEMS[sorted[sorted.length-1].i]+"\"; adjusted mean "+f2(sorted[sorted.length-1].v)+"). "+
+ "[Note 1: SUS item 8 uses plain-language wording ('awkward' in place of the original 'cumbersome'); the scoring method is unchanged — disclose this in the Methods if required.] "+
+ "[Note 2: read the percentile position of the mean from the published benchmark table (Sauro & Lewis) before reporting it.]";
+ $("taSusPara").value=susPara;
+ var flagged=cv.items.filter(function(x){return x.icvi<cv.crit});
+ var kappas=cv.items.map(function(x){return x.kappa}).filter(function(x){return x!=null});
+ var cviPara="An expert panel of "+cv.n+" ("+rolesLine(recs)+") rated "+cv.M+" items on a four-point relevance scale. "+
+ "I-CVIs ranged from "+f2(Math.min.apply(null,cv.items.map(function(x){return x.icvi})))+" to "+f2(Math.max.apply(null,cv.items.map(function(x){return x.icvi})))+"; "+
+ flagged.length+" item"+(flagged.length===1?" fell":"s fell")+" below the applicable criterion of "+f2(cv.crit)+" for a panel of "+cv.n+" (1.00 for panels of five or fewer, 0.83 for six to eight, 0.78 for nine or more)"+
+ (flagged.length?" — namely "+flagged.map(function(x){return x.id+" (I-CVI = "+f2(x.icvi)+")"}).join(", ")+" — and were revised accordingly":"")+". "+
+ "The scale-level average (S-CVI/Ave) was "+f2(cv.sAve)+" and the universal-agreement value (S-CVI/UA) was "+f2(cv.sUA)+", "+
+ (cv.sAve>=0.9?"meeting":"not meeting")+" the recommended S-CVI/Ave criterion of ≥ 0.90. "+
+ (kappas.length?"Modified kappa (k*) per Polit and Beck ranged from "+f2(Math.min.apply(null,kappas))+" to "+f2(Math.max.apply(null,kappas))+". ":"")+
+ "[Note: if any item was revised and re-rated in a second round, replace the flagged-item sentence with the final-round values.]";
+ $("taCviPara").value=cviPara;
+ var t1="Name\tRole\tSubmitted\tSUS total (0–100)\tBand\n";
+ st.rows.forEach(function(r){t1+=r.name+"\t"+(r.role||"")+"\t"+(r.date||"")+"\t"+f1(r.total)+"\t"+susBand(r.total)+"\n"});
+ $("taSusResp").value=t1;
+ var t2="Item\tStatement\tRaw mean (1–5)\tAdjusted mean (0–4)\n";
+ for(var i=0;i<10;i++){t2+="B"+(i+1)+"\t"+SUS_ITEMS[i]+"\t"+f2(st.itemRaw[i])+"\t"+f2(st.itemAdj[i])+"\n"}
+ $("taSusItems").value=t2;
+ var t3="Item\tContent element\t1\t2\t3\t4\tAgree(3-4)\tI-CVI\tk*\tFlag\n";
+ cv.items.forEach(function(x){t3+=x.id+"\t"+x.short+"\t"+x.cnt[1]+"\t"+x.cnt[2]+"\t"+x.cnt[3]+"\t"+x.cnt[4]+"\t"+x.A+"/"+x.n+"\t"+f2(x.icvi)+"\t"+(x.kappa==null?"—":f2(x.kappa))+"\t"+(x.icvi<cv.crit?"BELOW":"ok")+"\n"});
+ t3+="\nPanel n="+cv.n+"; criterion I-CVI ≥ "+f2(cv.crit)+"; S-CVI/Ave = "+f2(cv.sAve)+"; S-CVI/UA = "+f2(cv.sUA)+"\n";
+ $("taCviItems").value=t3;
+ var q="QUALITATIVE RESPONSES (n="+st.n+")\n========================================\n\n";
+ recs.forEach(function(r,i){
+  q+=(i+1)+". "+(r.respondent.name||"(unnamed)")+" — "+(r.respondent.role||"role not given")+"\n";
+  CVI_ITEMS.forEach(function(it){var c=r.cvi.comments&&r.cvi.comments[it.id];if(c)q+="   Item comment ["+it.id+"]: "+c+"\n"});
+  if(r.feedback.difficult)q+="   Most difficult: "+r.feedback.difficult+"\n";
+  if(r.feedback.improve)q+="   Would improve: "+r.feedback.improve+"\n";
+  q+="\n"});
+ $("taQual").value=q;
+ var combined="═══ SUS RESULTS ═══\n\n"+susPara+"\n\n"+
+  "═══ CVI RESULTS ═══\n\n"+cviPara+"\n\n"+
+  "═══ TABLE: SUS RESPONDENT SCORES ═══\n\n"+t1+"\n"+
+  "═══ TABLE: SUS PER-ITEM ═══\n\n"+t2+"\n"+
+  "═══ TABLE: CVI PER-ITEM ═══\n\n"+t3+"\n"+
+  "═══ QUALITATIVE RESPONSES ═══\n\n"+q;
+ $("taCombined").value=combined}
+
+/* ── QA: SELF-TEST ── */
+function runSelfTest(){
+ var pass=true,rows=[];
+ function T(name,ok,detail){if(!ok)pass=false;rows.push([name,ok?"PASS":"FAIL — "+detail])}
+ var s5=susTotal([5,5,5,5,5,5,5,5,5,5]);T("SUS all 5s = 50",s5===50,"got "+s5);
+ var s1=susTotal([1,1,1,1,1,1,1,1,1,1]);T("SUS all 1s = 50",s1===50,"got "+s1);
+ var sA=susTotal([5,1,5,1,5,1,5,1,5,1]);T("SUS 5/1 alternating = 100",sA===100,"got "+sA);
+ var sB=susTotal([1,5,1,5,1,5,1,5,1,5]);T("SUS 1/5 alternating = 100",sB===100,"got "+sB);
+ var s4=susTotal([4,4,4,4,4,4,4,4,4,4]);T("SUS all 4s = 50",s4===50,"got "+s4);
+ var s42=susTotal([4,2,4,2,4,2,4,2,4,2]);T("SUS 4/2 pattern = 75",s42===75,"got "+s42);
+ var k=kappaStar(0.75,4,3);T("Modified kappa (I-CVI .75, N=4, A=3) ≈ 0.6667",Math.abs(k-0.666667)<0.001,"got "+f2(k));
+ T("Combinatorics C(5,2) = 10",choose(5,2)===10,"got "+choose(5,2));
+ T("t-critical df=9 = 2.262",Math.abs(tcrit(9)-2.262)<0.0005,"got "+tcrit(9));
+ T("t-critical df=4 = 2.776",Math.abs(tcrit(4)-2.776)<0.0005,"got "+tcrit(4));
+ T("t-critical df=29 = 2.045",Math.abs(tcrit(29)-2.045)<0.0005,"got "+tcrit(29));
+ T("Median [1,2,3,4] = 2.5",median([1,2,3,4])===2.5,"got "+median([1,2,3,4]));
+ var sd=sdSample([2,4,4,4,5,5,7,9]);T("Sample SD [2,4,4,4,5,5,7,9] ≈ 2.1381",Math.abs(sd-2.13809)<0.0005,"got "+f2(sd));
+ var fb1=parseReceiptRows("B3. I thought the system was easy to use. Rating 5 (score 4)");
+ T("Fallback parser: SUS row",fb1.sus[3]===5,"got "+JSON.stringify(fb1.sus[3]));
+ var fb2=parseReceiptRows("C1. Dose-load scoring (Gate 1) 4 — Quite relevant");
+ T("Fallback parser: CVI row",fb2.cvi[1]===4,"got "+JSON.stringify(fb2.cvi[1]));
+ var fb3=parseReceiptRows("C4. Two-stream LAI cost model (Gate 4) 4 — Quite relevant");
+ T("Fallback parser: CVI row with digits in label",fb3.cvi[4]===4,"got "+JSON.stringify(fb3.cvi[4]));
+ var machine=buildMachineText({ref:"TEST01",respondent:{name:"T",role:"R",email:"",years:""},submittedAt:"2025-01-01T00:00:00.000Z",
+  sus:{items:[4,2,4,2,4,2,4,2,4,2]},cvi:{ratings:(function(){var o={};for(var q=1;q<=14;q++)o["C"+q]=4;return o})(),comments:{}},feedback:{}});
+ var pt=parseResponseText(machine,"test");
+ T("Machine block round-trip (SUS 4/2 → total 75)",pt.ok&&susTotal(pt.rec.sus.items)===75,pt.ok?("got "+susTotal(pt.rec.sus.items)):"parse failed: "+pt.reason);
+ var h='<div style="overflow-x:auto"><table class="t"><tr><th>Test</th><th>Result</th></tr>';
+ rows.forEach(function(r){h+='<tr><td>'+r[0]+'</td><td>'+(r[1].indexOf("PASS")===0?'<span class="chip-badge green">PASS</span>':'<span class="chip-badge red">'+esc(r[1])+'</span>')+'</td></tr>'});
+ h+='</table></div><div class="'+(pass?"ok-box":"warn")+'" style="margin-top:10px">'+(pass?"<b>ALL TESTS PASSED</b> — scoring and parsing engines verified.":"<b>FAILURE DETECTED</b> — do not use the output until fixed.")+'</div>';
+ $("selfTestOut").innerHTML=h;toast(pass?"Self-test: all passed":"Self-test: FAILURES — see QA tab")}
+function exportAll(){if(!devStore.length){toast("Nothing to export");return}
+ download("bnfmax_responses_"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(devStore.map(function(d){return d.rec}),null,2),"application/json");
+ toast("Exported "+devStore.length+" responses")}
+function clearAll(){if(!confirm("Delete ALL stored responses from this browser? Export first if needed!"))return;
+ devStore=[];saveStore();renderRespTable();renderSUS();renderCVI();buildTexts();toast("All responses cleared")}
+
+/* ═══════════ INIT ═══════════ */
+storageTest();
+if(enginePdf()){try{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER}catch(e){}}
+if(!STORAGE_OK){var sw=$("sandboxWarn");if(sw)sw.classList.remove("hidden")}
+renderEngineChips();
+window.addEventListener("focus",renderEngineChips);
+loadStore();
+</script>
+</body>
+</html>
